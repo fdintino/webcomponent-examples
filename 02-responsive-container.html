@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>
+      Demo 2 - complex responsive embed
+    </title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      #example {
+        position: absolute;
+        top: 5vh;
+        bottom: 5vh;
+        left: 5vw;
+        right: 5vw;
+      }
+      figure {
+        padding: 0;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        transform: translate3d(0, -50%, 0);
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        width: calc(100vw - 100px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="example">
+      <figure>
+        <responsive-container>
+          <iframe width="1200" height="675" src="https://www.youtube.com/embed/MrLb2-wETAQ" frameborder="0" allowfullscreen></iframe>
+        </responsive-container>
+        <figcaption>Some academics and mycologists offer an alternative Christmas origin story—one of a mushroom-toting healer from the Arctic. Video by Matthew Salton</figcaption>
+      </figure>
+    </div>
+
+    <script type="module">
+    import {LitElement, html} from 'https://dev.jspm.io/@polymer/lit-element@0.6.0-dev.6';
+
+    class ResponsiveContainer extends LitElement {
+      static get is() { return 'responsive-container'; }
+
+      firstUpdated() {
+        const refEl = this.querySelector('[width][height]');
+        const styleProps = {};
+        if (refEl) {
+          const width = refEl.getAttribute('width');
+          const height = refEl.getAttribute('height');
+
+          if (width) {
+            styleProps['--width'] = `${width}px`;
+          }
+          if (height) {
+            styleProps['--height'] = `${height}px`;
+          }
+          if (width && height) {
+            styleProps['--aspect-ratio'] = (width / height).toFixed(3);
+          }
+        }
+
+        this.setStyleProps(styleProps);
+
+        const figcaption = this.parentNode.querySelector('figcaption');
+        if (figcaption) {
+          figcaption.setAttribute('style', 'padding-top: 25px');
+          let height = figcaption.offsetHeight;
+          styleProps['--offset'] = `${height}px`;
+          this.setStyleProps(styleProps);
+
+          (new ResizeObserver(entries => {
+            if (entries[0].contentRect.height !== height) {
+              height = entries[0].contentRect.height;
+              styleProps['--offset'] = `${height}px`;
+              this.setStyleProps(styleProps);
+            }
+          })).observe(figcaption);
+        }
+      }
+
+      setStyleProps(props) {
+        const styleAttr = Object.entries(props).map(([k, v]) => `${k}: ${v}`).join(';');
+        this.setAttribute('style', styleAttr);
+        if (window.ShadyCSS) {
+          window.ShadyCSS.styleSubtree(this, props);
+        }
+      }
+
+      render() {
+        const refEl = this.querySelector('[width][height]');
+        const width = refEl.getAttribute('width');
+        const height = refEl.getAttribute('height');
+        return html`
+          <style>
+          :host {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: var(--width);
+            max-height: var(--height);
+            --offset: 18px;
+          }
+          img, svg {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
+          .wrapper {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            max-height: calc(100vh - 75px - var(--offset));
+            max-width: calc(var(--aspect-ratio) * (100vh - 100px - var(--offset)));
+          }
+
+          div ::slotted(picture), div ::slotted(iframe) {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            margin: 0;
+            padding: 0;
+          }
+          </style>
+          <div id="wrapper" class="wrapper">
+          <img src="data:image/svg+xml;charset=utf8,%3Csvg width='${width}' height='${height}' xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"/>
+          <slot></slot>
+          </div>
+        `;
+      }
+    }
+
+    window.customElements.define(ResponsiveContainer.is, ResponsiveContainer);
+    </script>
+  </body>
+</html>

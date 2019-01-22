@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <title>
+      Demo 3: Lightbox component
+    </title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="03-lightbox.css" />
+  </head>
+  <body id="home">
+    <div class="dialog-wrapper">
+      <shady-box id="carousel-chickenhawk">
+        <figure>
+          <responsive-container>
+            <iframe class="lazyload" width="1280" height="600"
+                    data-src="https://www.frankiedintino.com/static/images/samples/chickenhawk/contractors.html"></iframe>
+          </responsive-container>
+          <figcaption>
+            Parts from the F-35 are sourced from over 250 locations around the globe, spanning
+            11 countries and, in the U.S., more than 90 congressional districts. Hover over any
+            red dot to see a list of contractors.
+          </figcaption>
+        </figure>
+        <figure>
+          <responsive-container>
+            <iframe class="lazyload" width="1440" height="900"
+              data-src="https://www.frankiedintino.com/static/images/samples/chickenhawk/index.html"></iframe>
+          </responsive-container>
+          <figcaption>
+            The first map above (in green) shows per-capita military enlistments from 2000 to
+            2010, grouped by 3-digit zip code. The second (in red) shows the home towns of
+            deceased soldiers from the Iraq and Afghanistan wars. Enlistment rates vary
+            widely—in 2010, only 0.04 percent of the Upper East Side of Manhattan (zip code
+            prefix 101) enlisted, while the U.S. Virgin Islands (prefix 008) had an enlistment
+            rate of 0.98 percent. When it comes to lives lost, U.S. territories (particularly
+            Guam) shoulder an outsized burden.
+          </figcaption>
+        </figure>
+      </shady-box>
+    </div>
+    <div id="main">
+      <div class="project project--chickenhawk">
+        <div class="project__header">
+          <h3 class="project__title">
+            Lightbox Webcomponent Demo
+          </h3>
+          <div class="project__date">
+            Dec 2014
+          </div>
+        </div>
+        <div class="project__screenshot">
+          <a href="https://www.frankiedintino.com/static/images/samples/chickenhawk/contractors.html" class="project__screenshot__link" data-project-slug="chickenhawk"><picture class="project__screenshot__picture"><source class="lazyload" data-srcset="https://www.frankiedintino.com/images/chickenhawk-thumb-450.3bf84f2.webp 450w,https://www.frankiedintino.com/images/chickenhawk-thumb-600.0eaca61.webp 600w,https://www.frankiedintino.com/images/chickenhawk-thumb-900.248fb84.webp 900w,https://www.frankiedintino.com/images/chickenhawk-thumb-1200.34e9e47.webp 1200w" data-sizes="(min-width: 980px) 600px, (min-width: 660px) 540px, 100vw" type="image/webp" /><img class="lazyload" data-src="https://www.frankiedintino.com/images/chickenhawk-thumb-545.f743919.png" data-srcset="https://www.frankiedintino.com/images/chickenhawk-thumb-450.7a8a962.png 450w,https://www.frankiedintino.com/images/chickenhawk-thumb-600.c8a2b5d.png 600w,https://www.frankiedintino.com/images/chickenhawk-thumb-900.0d6b05b.png 900w,https://www.frankiedintino.com/images/chickenhawk-thumb-1200.febf2e7.png 1200w" data-sizes="(min-width: 980px) 600px, (min-width: 660px) 540px, 100vw" /></picture></a>
+        </div>
+      </div>
+    </div>
+    <script>
+      window.lazySizesConfig = { init: false };
+    </script>
+    <script type="module">
+      import 'https://dev.jspm.io/lazysizes';
+      import {LitElement, html} from 'https://dev.jspm.io/@polymer/lit-element@0.6.0-dev.6';
+      import ResizeObserver from 'https://dev.jspm.io/resize-observer-polyfill';
+
+      const lazysizes = window.lazySizes;
+
+      const hasNativeCssProps = (typeof window.ShadyCSS === 'undefined' || window.ShadyCSS.nativeCss);
+
+      export class ShadyBox extends LitElement {
+
+        static get properties() {
+          return {
+            selected: {
+              type: Object,
+              observer: '_selectedChanged'
+            }
+          };
+        }
+
+        static get is() { return 'shady-box'; }
+
+        open(target) {
+          this.style.display = 'block';
+          this.ownerDocument.body.classList.add('lightbox-open');
+          if (typeof target !== 'undefined') {
+            if (target instanceof HTMLElement) {
+              this.selected = target;
+            } else if (this.children.length > target) {
+              this.selected = this.children[target];
+            }
+          }
+        }
+
+        close() {
+          this.ownerDocument.body.classList.remove('lightbox-open');
+          this.selected = undefined;
+          for (let i = 0; i < this.children.length; i++) {
+            this.children[i].removeAttribute('style');
+          }
+          if (hasNativeCssProps || false) {
+            this.style.display = '';
+          } else {
+            const nextSibling = this.nextSibling;
+            const parentNode = this.parentNode;
+            const nodeClone = this._originalNode;
+            parentNode.removeChild(this);
+            if (nextSibling) {
+              parentNode.insertBefore(nodeClone, nextSibling);
+            } else {
+              parentNode.appendChild(nodeClone);
+            }
+          }
+        }
+
+        render() {
+          if (true || (!hasNativeCssProps && !this._originalNode)) {
+            this._originalNode = this.cloneNode(true);
+          }
+          return html`
+            <style>
+              * {
+                box-sizing: border-box;
+              }
+              :host {
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                position: relative;
+                overflow: hidden;
+              }
+              .screen {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                background: rgba(0, 0, 0, 0.85);
+              }
+              div ::slotted(figure) {
+                padding: 0;
+                margin: 0;
+                position: absolute;
+                top: 50%;
+                transform: translate3d(0, -50%, 0);
+                height: 100%;
+                align-items: center;
+                justify-content: center;
+                left: 0;
+                display: flex;
+                flex-direction: column;
+                width: calc(100vw - 100px);
+              }
+              div ::slotted(:not([selected])) {
+                transform: translate3d(100vw, -50%, 0);
+              }
+              div ::slotted(iframe) {
+                width: 100%;
+                height: 100%;
+                border: 0;
+                margin: 0;
+                padding: 0;
+              }
+
+              div ::slotted(picture) {
+                display: block;
+              }
+              .btn {
+                padding: 0;
+                border: none;
+                background: none;
+                z-index: 2;
+              }
+
+              .btn--nav {
+                position: absolute;
+                background: hsla(0, 0%, 100%, 0.75);
+                border: none;
+                color: #333;
+              }
+
+              .btn--nav:hover {
+                background: white;
+                cursor: pointer;
+              }
+
+              .btn--nav:focus {
+                outline: none;
+                box-shadow: 0 0 0 5px #19F;
+              }
+
+              .btn--nav:active {
+                opacity: 0.6;
+              }
+
+              .btn--nav:disabled {
+                opacity: 0.3;
+                cursor: auto;
+                pointer-events: none;
+              }
+
+              .btn--nav {
+                top: 50%;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                transform: translateY(-50%);
+              }
+
+              .btn--prev { left: 10px; }
+              .btn--next { right: 10px; }
+
+              .btn--nav .btn--icon {
+                position: absolute;
+                left: 20%;
+                top: 20%;
+                width: 60%;
+                height: 60%;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 10,50 L 60,100 L 70,90 L 30,50 L 70,10 L 60,0 Z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: 50% 50%;
+              }
+
+              .btn--next .btn--icon {
+                transform: rotate(180deg);
+              }
+
+              .btn--nav[disabled] {
+                opacity: 0.4;
+              }
+
+              .btn--close {
+                height: 20px;
+                width: 20px;
+                display: inline-block;
+                vertical-align: text-top;
+              }
+
+              .close-dialog {
+                z-index: 20;
+                width: 32px;
+                height: 32px;
+                position: absolute;
+                right: 12px;
+                top: 12px;
+                background-color: #222;
+                border: 2px solid #fff;
+                border-radius: 50%;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                          0 1px 5px 0 rgba(0, 0, 0, 0.12),
+                          0 3px 1px -2px rgba(0, 0, 0, 0.2);
+                background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 16'%3E%3Cpath fill='%23fff' d='M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z'/%3E%3C/svg%3E");
+                background-size: 20px 20px;
+                background-position: 50% 50%;
+                background-repeat: no-repeat;
+              }
+
+              .close-dialog::before {
+                display: block;
+                width: 20px;
+                height: 20px;
+              }
+
+              .close-dialog svg {
+                display: inline-block;
+                height: 20px;
+                width: 20px;
+                fill: #fff;
+              }
+
+              .demo-dialog {
+                position: absolute;
+                top: 25px;
+                left: 50px;
+                width: calc(100% - 100px);
+                height: calc(100% - 50px);
+                margin: 0;
+                padding: 0;
+                z-index: 2;
+              }
+
+              @media (max-width: 500px) {
+                .demo-dialog {
+                  position: absolute;
+                  top: 70px;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  width: 100%;
+                  height: calc(100% - 70px);
+                }
+
+                .close-dialog {
+                  left: calc(50% - 25px);
+                  top: 10px;
+                  width: 50px;
+                  height: 50px;
+                }
+
+                div ::slotted(figure) {
+                  width: 100vw;
+                }
+                .btn--nav {
+                  top: 36px;
+                }
+              }
+            </style>
+            <div class="demo-dialog">
+              <slot></slot>
+            </div>
+             <div class="close-dialog" @click="${() => this.close()}">
+              <svg class="btn btn--close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 16">
+                <path fill="#fff" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/>
+              </svg>
+            </div>
+
+            <button id="prev" class="btn btn--nav btn--prev" @click="${() => this.prev()}">
+              <div class="btn--icon"></div>
+              </button>
+            <button id="next" class="btn btn--nav btn--next" @click="${() => this.next()}">
+              <div class="btn--icon"></div>
+            </button>
+            <div class="screen" @click="${() => this.close()}"></div>
+          `;
+        }
+
+        firstUpdated() {
+          lazysizes.init();
+          this.shadowRoot.addEventListener('slotchange', () => this._resetSelected());
+          this._prevButton = this.$('prev');
+          this._nextButton = this.$('next');
+
+          if (this.children.length === 1) {
+            this._prevButton.style.display = 'none';
+            this._nextButton.style.display = 'none';
+          }
+
+          this._resetSelected();
+        }
+
+        $(id) {
+          return this.shadowRoot.getElementById(id);
+        }
+
+        updated(changedProps) {
+          if (changedProps.has('selected')) {
+            this._selectedChanged(this.selected, changedProps.get('selected'));
+          }
+        }
+
+        _selectedChanged(selected, oldSelected) {
+          if (oldSelected) oldSelected.removeAttribute('selected');
+          if (selected) selected.setAttribute('selected', '');
+          if (selected) {
+            this._prevButton.disabled = !selected.previousElementSibling;
+            this._nextButton.disabled = !selected.nextElementSibling;
+          } else {
+            this._prevButton.disabled = true;
+            this._nextButton.disabled = true;
+          }
+        }
+
+        _resetSelected() {
+          if (!this.selected || this.selected.parentElement !== this) {
+            this.selected = this.firstElementChild;
+          }
+        }
+
+        prev() {
+          if (this.$('prev').disabled) {
+            return;
+          }
+          const elem = this.selected && this.selected.previousElementSibling;
+          if (elem && !this._touchDir) {
+            // Setup transition start state
+            const oldSelected = this.selected;
+            this._translateX(oldSelected, 0);
+            this._translateX(elem, '-100vw');
+
+            // Start the transition
+            this.selected = elem;
+            this._translateX(oldSelected, '100vw', true /* transition */);
+            this._translateX(elem, '0vw', true /* transition */);
+          }
+        }
+
+        next() {
+          if (this.$('next').disabled) {
+            return;
+          }
+          const elem = this.selected && this.selected.nextElementSibling;
+          if (elem && !this._touchDir) {
+            // Setup transition start state
+            const oldSelected = this.selected;
+            this._translateX(oldSelected, 0);
+            this._translateX(elem, '100vw');
+
+            // Start the transition
+            this.selected = elem;
+            this._translateX(oldSelected, '-100vw', true /* transition */);
+            this._translateX(elem, '0vw', true /* transition */);
+          }
+        }
+
+        _translateX(elem, x, transition) {
+          elem.style.transition = transition ? 'transform 1s ease-in-out' : '';
+
+          if (typeof x === 'number') {
+            x = (100 * (x / this.offsetWidth)).toFixed(1) + 'vw';
+          }
+          elem.style.transform = 'translate3d(' + x + ', -50%, 0)';
+        }
+
+        ready() {
+          super.ready();
+          setTimeout(() => {
+            requestAnimationFrame(() => this._installListeners());
+          }, 0);
+        }
+
+        _installListeners() {
+          this.addEventListener('transitionend', (e) => this._resetChildrenStyles(e));
+          this.addEventListener('touchstart', (e) => this._touchstart(e));
+          this.addEventListener('touchmove', (e) => this._touchmove(e));
+          this.addEventListener('touchend', (e) => this._touchend(e));
+        }
+
+        _resetChildrenStyles() {
+          let elem = this.firstElementChild;
+          while (elem) {
+            elem.style.display = '';
+            elem.style.transition = '';
+            elem.style.transform = '';
+            elem = elem.nextElementSibling;
+          }
+        }
+
+        _touchstart(event) {
+          // No transition if less than two images
+          if (this.childElementCount < 2) {
+            return;
+          }
+
+          // Save start coordinates
+          if (!this._touchDir) {
+            this._startX = event.changedTouches[0].clientX;
+            this._startY = event.changedTouches[0].clientY;
+          }
+        }
+
+        _touchmove(event) {
+          // No transition if less than two images
+          if (this.childElementCount < 2) {
+            return;
+          }
+
+          // Is touchmove mostly horizontal or vertical?
+          if (!this._touchDir) {
+            const absX = Math.abs(event.changedTouches[0].clientX - this._startX);
+            const absY = Math.abs(event.changedTouches[0].clientY - this._startY);
+            this._touchDir = absX > absY ? 'x' : 'y';
+          }
+
+          if (this._touchDir === 'x') {
+            // Prevent vertically scrolling when swiping
+            event.preventDefault();
+
+            let dx = Math.round(event.changedTouches[0].clientX - this._startX);
+            const prevChild = this.selected.previousElementSibling;
+            const nextChild = this.selected.nextElementSibling;
+
+            // Don't translate past the current image if there's no adjacent image in that direction
+            if ((!prevChild && dx > 0) || (!nextChild && dx < 0)) {
+              dx = 0;
+            }
+
+            this._translateX(this.selected, dx);
+            if (prevChild) {
+              this._translateX(prevChild, dx - this.offsetWidth);
+            }
+            if (nextChild) {
+              this._translateX(nextChild, dx + this.offsetWidth);
+            }
+          }
+        }
+
+        _touchend(event) {
+          // No transition if less than two images
+          if (this.childElementCount < 2) {
+            return;
+          }
+
+          // Don't finish swiping if there are still active touches.
+          if (event.touches.length) {
+            return;
+          }
+
+          if (this._touchDir === 'x') {
+            let dx = Math.round(event.changedTouches[0].clientX - this._startX);
+            const prevChild = this.selected.previousElementSibling;
+            const nextChild = this.selected.nextElementSibling;
+
+            // Don't translate past the current image if there's no adjacent image in that direction
+            if ((!prevChild && dx > 0) || (!nextChild && dx < 0)) {
+              dx = 0;
+            }
+
+            if (dx > 0) {
+              if (dx > 100) {
+                if (dx === this.offsetWidth) {
+                  // No transitionend will fire (since we're already in the final state),
+                  // so reset children styles now
+                  this._resetChildrenStyles();
+                } else {
+                  this._translateX(prevChild, 0, true);
+                  this._translateX(this.selected, '100vw', true);
+                }
+                this.selected = prevChild;
+              } else {
+                this._translateX(prevChild, '-100vw', true);
+                this._translateX(this.selected, 0, true);
+              }
+            } else if (dx < 0) {
+              if (dx < -100) {
+                if (dx === -this.offsetWidth) {
+                  // No transitionend will fire (since we're already in the final state),
+                  // so reset children styles now
+                  this._resetChildrenStyles();
+                } else {
+                  this._translateX(this.selected, '-100vw', true);
+                  this._translateX(nextChild, 0, true);
+                }
+                this.selected = nextChild;
+              } else {
+                this._translateX(this.selected, 0, true);
+                this._translateX(nextChild, '100vw', true);
+              }
+            } else {
+              // No transitionend will fire (since we're already in the final state),
+              // so reset children styles now
+              this._resetChildrenStyles();
+            }
+          }
+
+          // Reset touch direction
+          this._touchDir = null;
+        }
+
+        get updateComplete() {
+          return (async () => super.updateComplete)();
+        }
+      }
+
+      window.customElements.define(ShadyBox.is, ShadyBox);
+
+      export class ResponsiveContainer extends LitElement {
+        static get is() { return 'responsive-container'; }
+
+        firstUpdated() {
+          const refEl = this.querySelector('[width][height]');
+          const styleProps = {};
+          if (refEl) {
+            const width = refEl.getAttribute('width');
+            const height = refEl.getAttribute('height');
+
+            if (width) {
+              styleProps['--width'] = width;
+              styleProps['--widthpx'] = `${width}px`;
+            }
+            if (height) {
+              styleProps['--height'] = height;
+              styleProps['--heightpx'] = `${height}px`;
+            }
+          }
+
+          this.setStyleProps(styleProps);
+
+          const figcaption = this.parentNode.querySelector('figcaption');
+          if (figcaption) {
+            figcaption.setAttribute('style', 'padding-top: 25px');
+            let height = figcaption.offsetHeight;
+            styleProps['--offset'] = `${height}px`;
+            this.setStyleProps(styleProps);
+
+            (new ResizeObserver(entries => {
+              if (entries[0].contentRect.height !== height) {
+                height = entries[0].contentRect.height;
+                styleProps['--offset'] = `${height}px`;
+                this.setStyleProps(styleProps);
+              }
+            })).observe(figcaption);
+          }
+        }
+
+        setStyleProps(props) {
+          const styleAttr = Object.entries(props).map(([k, v]) => `${k}: ${v}`).join(';');
+          this.setAttribute('style', styleAttr);
+          if (window.ShadyCSS) {
+            window.ShadyCSS.styleSubtree(this, props);
+          }
+        }
+
+        render() {
+          const refEl = this.querySelector('[width][height]');
+          const width = refEl.getAttribute('width');
+          const height = refEl.getAttribute('height');
+          return html`
+            <style>
+            :host {
+              flex-grow: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+              max-width: var(--widthpx);
+              max-height: var(--heightpx);
+              --offset: 18px;
+            }
+            img, svg {
+              display: block;
+              width: 100%;
+              height: auto;
+            }
+            .wrapper {
+              width: 100%;
+              position: relative;
+              overflow: hidden;
+              max-height: calc(100vh - 75px - var(--offset));
+              max-width: calc((var(--width) / var(--height)) * (100vh - 100px - var(--offset)));
+            }
+
+            div ::slotted(picture), div ::slotted(iframe) {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              border: 0;
+            }
+            </style>
+            <div id="wrapper" class="wrapper">
+            <img src="data:image/svg+xml;charset=utf8,%3Csvg width='${width}' height='${height}' xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E"/>
+            <slot></slot>
+            </div>
+          `;
+        }
+      }
+
+      window.customElements.define(ResponsiveContainer.is, ResponsiveContainer);
+
+      document.body.addEventListener('click', (event) => {
+        const target = event.target.closest('a');
+        if (!target) {
+          return;
+        }
+        const href = target.getAttribute('href');
+        const match = document.body.querySelector(
+          `iframe[data-src^="${href}"],iframe[src^="${href}"],img[src^="${href}"],img[data-src^="${href}"]`);
+        if (match) {
+          const figure = match.closest('figure');
+          const carousel = match.closest('shady-box');
+          if (figure && carousel) {
+            event.preventDefault();
+            carousel.open(figure);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

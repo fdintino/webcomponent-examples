@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>
+      Demo 1 - simple responsive iframe
+    </title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+      <h1>Simple responsive iframe</h1>
+
+      <responsive-iframe>
+        <iframe width="960" height="540" src="https://www.youtube.com/embed/MrLb2-wETAQ" frameborder="0" allowfullscreen></iframe>
+      </responsive-iframe>
+
+    <script>
+      class ResponsiveIFrame extends HTMLElement {
+        constructor() {
+          super();
+
+          const refEl = this.querySelector('[width][height]');
+          if (!refEl) {
+            throw new Exception(
+              "<responsive-iframe> missing element with width & height attrs");
+          }
+
+          const width = parseInt(refEl.getAttribute('width'), 10);
+          const height = parseInt(refEl.getAttribute('height'), 10);
+          const paddingBottom = (100 * height / width).toFixed(2);
+
+          const shadow = this.attachShadow({mode: 'open'});
+
+          shadow.innerHTML = `
+            <style>
+            .wrapper {
+              position: relative;
+              overflow: hidden;
+              height: 0;
+              padding-bottom: ${paddingBottom}%;
+            }
+            .wrapper ::slotted(iframe) {
+              position: absolute;
+              width: 100%;
+              height: 100%;
+            }
+            </style>
+            <div class="wrapper">
+              <slot></slot>
+            </div>
+          `;
+        }
+      }
+      window.customElements.define('responsive-iframe', ResponsiveIFrame);
+    </script>
+  </body>
+</html>
